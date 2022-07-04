@@ -185,3 +185,14 @@ l1-cli newaddr && l2-cli newaddr && l3-cli newaddr
 ```
 
 Then we 
+
+### Stage 2: Connecting to Peers
+
+### Stage 3: Opening Channels
+
+### Stage 4: Making Payments
+
+### Stage 5: Receiving Payments
+
+### Stage 6: Adding Bling???
+
