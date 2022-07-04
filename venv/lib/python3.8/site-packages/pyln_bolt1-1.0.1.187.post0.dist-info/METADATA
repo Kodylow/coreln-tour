@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: pyln-bolt1
+Version: 1.0.1.187.post0
+Summary: 
+License: MIT
+Author: Rusty Russell
+Author-email: rusty@blockstream.com
+Requires-Python: >=3.7,<4.0
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
