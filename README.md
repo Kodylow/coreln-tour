@@ -190,6 +190,8 @@ Then we
 
 ### Stage 3: Opening Channels
 
+### Stage 3a: Collaborative Channel Opens aka Liquidity Ads
+
 ### Stage 4: Making Payments
 
 ### Stage 5: Receiving Payments
