@@ -184,11 +184,77 @@ So now we've got a bunch of bitcoin on our bt-cli layer 1 node. We have to send 
 l1-cli newaddr && l2-cli newaddr && l3-cli newaddr
 ```
 
-Then we 
+Then we send some bitcoin to each one of these nodes, let's do 10 BTC to each one. We can do this in a single tx using the bitcoin-cli sendmany command,
+
+```
+bt-cli sendmany '' '{"replace_me_with_l1_address": 10, "replace_me_with_l2_address": 10, "replace_me_with_l3_address": 10}'
+
+## for example this could look like
+## bt-cli sendmany '' '{"bcrt1qeg4k75dj5gq5hrtg39j4v09ycp6hs0rcc0l3ws": 10, "bcrt1q0zej0qnvqyc55re4hu4rdrhc5q249cxqd3glaf": 10, "bcrt1qekt723mjayza474qlcrgcc28q9uw683ut0v8f7": 10}'
+```
+(make sure you have the empty string, '', between sendmany and your json of address:amount)
+
+If the transaction went through, bitcoind returns the txid of the transaction confirming it was sent to the mempool. Reminder, we're on regtest where WE control the block production, so we need to mine a block to confirm the TX.
+
+```
+bt-cli generatetoaddress 1 $(bt-cli getnewaddress)
+```
+
+Now if we run l1-cli helpme again, we'll see...
+
+```
+STAGE 1 (funds): COMPLETE (1000000000000msat a.k.a. 10.00000000btc)
+```
 
 ### Stage 2: Connecting to Peers
 
+Our lightning nodes have been running for a little while, let's see if our nodes can see each other...
+```
+$ l1-cli getinfo
+{
+   "id": "03e46bab701efb2503f1c48d56654674e0e3836f6dd92a851887b3de8c3800c7fb",
+   "alias": "WEIRDROUTE",
+   "color": "03e46b",
+   "num_peers": 0,
+   ...
+}
+```
+
+Alright, what's going on? Why do we not have any peers, even though we have 3 nodes running on our regtest network?
+
+Our nodes start as islands, they're not connected and don't automatically connect to each other by default. It's a little different than layer 1 Bitcoin where when I first start my bitcoin node it reaches out to DNS seeds to find some peers and begin connecting. The Lightning Nodes actually don't have any idea how to connect to each other right now, we have to do it manually. Let's connect l1 to l2 using the connection info you wrote down earlier.
+```
+## replace connection info with your l2 node's connection infow you should have it above or just run l2-cli getinfo
+l1-cli connect node_id@ip_address:port
+
+## e.g. $ l1-cli connect 022979576a85cbc73cc3d8a8928a3a9c7c97995983822ca8854ab5c69f327f3073@127.0.0.1:7272
+
+```
+
+You should see a return json like this:
+```
+{
+   "id": "022979576a85cbc73cc3d8a8928a3a9c7c97995983822ca8854ab5c69f327f3073", ## l2's node_id
+   "features": "08026aa2",
+   "direction": "out",
+   "address": {
+      "type": "ipv4",
+      "address": "127.0.0.1", ## l2's address
+      "port": 7272 ## l2's port
+   }
+}
+```
+
+Now if we run l1-cli getinfo, we should see that we've got a peer!
+
+##### Exercise B
+    1. Connect l2 to l3 using the same process as above. You should see l2 has 2 peers after connecting the 2 of them.
+
 ### Stage 3: Opening Channels
+
+Alright, now that our nodes have peer connections (l1 with l2, l2 with l3) we're ready to open our first channel! Through the peer connection, our nodes can pass INFORMATION back and forth. Notice that if you run getinfo on l1 and l3, both only have 1 peer, l2. They don't know about each other yet, only about their connection to l2, they haven't gossipped their peers' info to each other yet. We'll get back to that when we talk about the difference between PEERS and NODES.
+
+Through a channel, our nodes can pass VALUE. A channel opens as an on-chain, layer 1 bitcoin transaction. We can open 1 way channels pretty easily: let's open a 1 way channel from l1 to l2.
 
 ### Stage 3a: Collaborative Channel Opens aka Liquidity Ads
 
