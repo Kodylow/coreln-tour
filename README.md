@@ -4,7 +4,7 @@ Core Lightning (CLN) is a lightweight, highly customizable and standard complian
 
 We're going to show you how to:
 
-    1. Set up a CLN regtesting environment to play around in. We'll make 3 lightning nodes with a shared bitcoin backend (more on this later).
+    1. Set up a CLN regtesting environment to play around in. We'll make 3 lightning nodes with a shared bitcoind backend (more on this later).
     2. Explore the plugin architecture and plug a couple more processes in for additional functionality.
     3. Connect your CLN nodes, fund them in a regtesting environment, and open one way channels.
     4. Perform a collaborative channel open with liquidity ads to dual-fund a channel.
@@ -248,13 +248,68 @@ You should see a return json like this:
 Now if we run l1-cli getinfo, we should see that we've got a peer!
 
 ##### Exercise B
-    1. Connect l2 to l3 using the same process as above. You should see l2 has 2 peers after connecting the 2 of them.
+    1. Connect l2 to l3 using the same process as above. 
+    2. Try running l2-cli listpeers, then repeat the listpeers command for l1 and l3. You should see l2 has 2 peers after connecting the 2 of them, but l1 and l3 only have 1. 
+    
 
 ### Stage 3: Opening Channels
 
-Alright, now that our nodes have peer connections (l1 with l2, l2 with l3) we're ready to open our first channel! Through the peer connection, our nodes can pass INFORMATION back and forth. Notice that if you run getinfo on l1 and l3, both only have 1 peer, l2. They don't know about each other yet, only about their connection to l2, they haven't gossipped their peers' info to each other yet. We'll get back to that when we talk about the difference between PEERS and NODES.
+Alright, now that our nodes have peer connections (l1 with l2, l2 with l3) we're ready to open our first channel! 
 
-Through a channel, our nodes can pass VALUE. A channel opens as an on-chain, layer 1 bitcoin transaction. We can open 1 way channels pretty easily: let's open a 1 way channel from l1 to l2.
+Through the peer connection, our nodes can pass INFORMATION back and forth. Notice that if you run getinfo on l1 and l3, both only have 1 peer, l2. They don't know about each other yet, only about their connection to l2, they haven't gossipped their peers' info to each other yet. We'll get back to that when we talk about the difference between PEERS and NODES.
+
+Through a channel, our nodes can pass VALUE. A channel opens as an on-chain, layer 1 bitcoin transaction. We can open 1 way channels pretty easily: let's open a 1-way channel from l1 to l2. On-chain, this will look like we're locking bitcoin to a custom script. We won't reveal that the lock was a 2-2 multisig creating a channel between lightning nodes unless we close the channel.
+
+Each node should now have a 10BTC UTXO. We can confirm this by running listfunds.
+```
+l1-cli listfunds
+```
+
+We're now going to open a 10million sat channel between l1 and l2, where l1 is the only party funding the channel so starts with owning all the bitcoin in it. To open the channel we need to specify:
+    1. Which node_id we're opening to.
+    2. How much of our funds we'd like to commit to the channel.
+    3. and what feerate we'd like to pay to the miners
+
+Remembering the order you have to input command line arguments can get annoying, so coreLN lets you add the -k flag to label your arguments as key value pairs,
+
+```
+l1-cli fundchannel -k id=02348345cbe1b14d5660c47a3a17005f882fb96be38497fc4c5f2259af6e4e1b78 amount=10000000sat feerate=250
+```
+
+If you did it right, you should see a return with the completed tx information.
+
+##### An Aside on The Funding Transaction
+
+Let's take a sec to parse what the funding transaction looks like. Yours will be different, but should look similar to this:
+```
+{
+   "tx": "020000000001011ab18c3018b34fa83fea330d1fea046aaba05e48907ff0f5494606cc03e632370300000000fdffffff0280969800000000002200209793b535a2ed541eda684496ef0ed0d1059aaaf0fd5dd4bbf2f59f52721523e5e632023b00000000160014f89ad37ae2fada6473228e6039f6b0e5f330affe02473044022072cfac46806ba0d2b0eb0967e178d670bd185557cd3f92ef8e3f6c445b79c91002205f3d36186fc04394708c1fe8a9f1a97d064a2d67e3f57a1eea068eac112bacf0012102984ff808535936ff8f2de909e6d6f5ad6e79eccc98e970c446ac929044e8cf7a67000000",
+   "txid": "0a5d6cb1f597dc846051765e085770854cae911edec63094bce673aa4b1f0d28",
+   "channel_id": "280d1f4baa73e6bc9430c6de1e91ae4c857057085e76516084dc97f5b16c5d0a",
+   "outnum": 0
+}
+```
+
+You can parse this into something more human readable with the bitcoin-cli by running,
+```
+bt-cli decoderawtransaction replace_me_with_the_raw_tx
+
+## replace that with the string starting with 020000000001...
+```
+
+As we can see, the funding transaction takes a single input (the UTXO we sent from the bt-cli earlier), and has 2 outputs to 2 different address types. The second output is l1's change back to itself, a new Pay2WitnessPubKeyHash address. The first output, for 10million sats, locks to a Pay2WitnessScriptHash address. We know it's a lightning channel, but as of right now no one else does for sure. We're eventually going to gossip that it's a lightning channel to everyone else, but if someone were only looking at layer 1 bitcoin they wouldn't know that we're using that P2WSH for lightning stuff.
+
+### Exercise C
+
+    1. Open another one-way channel from l2 to l3. If you did it correctly the command l2-cli , while l3-cli should only list 2 channels.
+
+### Channels: Why does a single channel look like 2?
+
+A question you're probably asking right now, why are there 
+
+
+
+
 
 ### Stage 3a: Collaborative Channel Opens aka Liquidity Ads
 
