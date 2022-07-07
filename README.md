@@ -1,4 +1,4 @@
-# A Tour of Core Lightning
+helpe# A Tour of Core Lightning
 
 Core Lightning (CLN) is a lightweight, highly customizable and standard compliant implementation of the Bitcoin Lightning Network protocol. We're going to spin up a couple nodes, make a regtest lightning network, and sling some sats around making payments between the nodes. 
 
@@ -396,14 +396,22 @@ The final step of the helpme plugin's Node Setup Walkthrough is "adding bling". 
 
 Now as great as giant command line json returns are, it's also nice to be able to see a picture of your node. We're going to plugin another process called "summary" to our l2, which prints out a nice in terminal summary of the current state of our node and its channels.
 ```
-l2-cli plugin start $PWD/plugins/summary/summary.py && l2-cli summary
+l2-cli plugin start $PWD/plugins/summary/summary.py && 
+l2-cli summary
 ```
 
 CoreLN's plugin architecture makes it incredibly easy for you to add, remove, and change functionality to tailor your node to meet your needs (or just make fun tools!).
 
+### Exercise F
+```
+Try to balance the inbound/outbound liquidity in each of the channels by creating and paying invoices between the nodes until all nodes have ~50% inbound/outbound on the summary plugin terminal printout.
+```
+
 ## Collaborative Channel Opens with Liquidity Ads
 
-# Thanks! Links to CoreLN and Base58
+# Thanks for being #reckless with us!
+
+Here are the links again to CoreLN and Base58:
 
 If you'd like to start contributing to CoreLN, please [hop into the discord](https://discord.gg/gPnhAvkaGq), open an issue or advance a PR [in the github repo](https://github.com/ElementsProject/lightning), or follow the project [on Twitter](https://twitter.com/core_LN). 
 
