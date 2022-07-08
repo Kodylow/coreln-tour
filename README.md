@@ -1,4 +1,4 @@
-helpe# A Tour of Core Lightning
+# A Tour of Core Lightning
 
 Core Lightning (CLN) is a lightweight, highly customizable and standard compliant implementation of the Bitcoin Lightning Network protocol. We're going to spin up a couple nodes, make a regtest lightning network, and sling some sats around making payments between the nodes. 
 
@@ -26,6 +26,7 @@ bitcoind -regtest -daemon -fallbackfee=0.000025
 
 ## You should see:
 ## Bitcoin Core starting
+
 ```
 
 We've now got the bitcoin core daemon running on regnet as a background process in our repl! We can interact with it by issue commands through the bitcoin command line interface (we have to tell the cli to talk to regtest though! that's why we add the -regtest flag)
@@ -408,6 +409,20 @@ Try to balance the inbound/outbound liquidity in each of the channels by creatin
 ```
 
 ## Collaborative Channel Opens with Liquidity Ads
+
+As you can probably tell after that exercise, rebalancing liquidity can be a total pain! For the first years of the lightning network, new nodes consistently ran into the inbound liquidity problem: you can't receive payments until you have inbound liquidity from another node, but why would someone want to open a channel to a new and poorly connected node?
+
+Liquidity ads are an in-spec solution to this problem, and allow you to advertise your willingness to collaboratively open a channel to another party. And instead of opening 2 channels, one with l2's funds and one with l1's funds, the 2 nodes will open a single channel with balanced inbound/outbound capacity between the nodes. 
+
+Let's use some of l2's on-chain funds to make a liquidity ad using the funder plugin (it ships by default with coreln so will already be running on our nodes!):
+```
+l2-cli funderupdate -k leases_only=1 lease_fee_base_msat=100msat lease_fee_basis=50
+```
+
+And if we run the listnodes command from l1, we'll see that l2 is now advertising its willingness to open collaborative channels!
+```
+l1-cli listnodes
+```
 
 # Thanks for being #reckless with us!
 
