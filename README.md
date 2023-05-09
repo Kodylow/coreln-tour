@@ -4,7 +4,7 @@ Core Lightning (CLN) is a lightweight, highly customizable and standard complian
 
 We'll be running everything in this repl, all the dependencies are set up through Replit's Nix backend, but if you're interested in how to install and run Core Lightning on your machine see the walkthrough under "Installation" in [the coreln github repo](https://github.com/ElementsProject/lightning). If you want to run it with Nix like we do here, see [nix-bitcoin](https://github.com/fort-nix/nix-bitcoin), a collection of Nix packages and NixOS modules for easily installing full-featured Bitcoin (and Lightning) nodes.
 
-We're going to show you how to:
+We're going to learn how to:
 
     1. Set up a CLN regtesting environment to play around in. We'll make 3 lightning nodes with a shared bitcoind backend (more on this later).
     2. Explore the plugin architecture and plug a couple more processes in for additional functionality.
@@ -15,6 +15,8 @@ We're going to show you how to:
 If you'd like to start contributing to CoreLN, please [hop into the discord](https://discord.gg/gPnhAvkaGq), open an issue or advance a PR [in the github repo](https://github.com/ElementsProject/lightning), or follow the project [on Twitter](https://twitter.com/core_LN). 
 
 You can find Base58 [on our website](https://www.base58.info/) and [on Twitter](https://twitter.com/base58btc), where we'll be posting about our upcoming bitcoin protocol development classes and other repls like this one walking through open source bitcoin projects.
+
+We've cloned a copy of the core lightning repo into this repl in the "lightning" folder if you want to poke around in it! (the HACKING.md file we've copied to the top level of this filetree gives a walkthrough of the codebase and advice on how to start contributing). That's not the code we'll be using for the exercises, we're using the nixpkgs we loaded into the repl so you can run it all on the repl's shell, so don't be scared to tweak around in there while we teach you about CoreLN :)
 
 Let's get started!
 
@@ -416,15 +418,40 @@ Liquidity ads are an in-spec solution to this problem, and allow you to advertis
 
 Let's use some of l2's on-chain funds to make a liquidity ad using the funder plugin (it ships by default with coreln so will already be running on our nodes!):
 ```
-l2-cli funderupdate -k leases_only=1 lease_fee_base_msat=100msat lease_fee_basis=50
+l2-cli funderupdate -k leases_only=true lease_fee_base_msat=10sat lease_fee_basis=50
 ```
 
-And if we run the listnodes command from l1, we'll see that l2 is now advertising its willingness to open collaborative channels!
+And if we run the listnodes command from l1, we'll see that l2 is now advertising its willingness to open collaborative channels! (might need to wait a second for l2 to gossip about its new liquidity ad!)
 ```
 l1-cli listnodes
+
+## and in the return json you'll see something that looks a little like this:
+## ...
+"option_will_fund": {
+            "lease_fee_base_msat": "100000msat",
+            "lease_fee_basis": 50,
+            "funding_weight": 666,
+            "channel_fee_max_base_msat": "5000000msat",
+            "channel_fee_max_proportional_thousandths": 100,
+            "compact_lease": "029a00320064000000644c4b40"
+         }
 ```
 
-# Thanks for being #reckless with us!
+Alright! l2 is gossipping that it's willing to open collaborative channels and has the funds to do it, let's open a channel with it! The only arguments we'll have to add different than the one-way open are a request_amount, how much we'd like to have as inbound from l2, and the compact_lease, which are the liquidity ad terms for fees we're negotiating the collaborative open around:
+
+```
+l1-cli fundchannel -k id=replace_me_with_l2_nodeid amount=100000sat request_amt=100000sat compact_lease=replace_me_with_compact_lease
+```
+
+If we run `l1-cli summary` again, we'll see that this new node we opened is balanced between both parties!
+
+### Exercise G
+```
+Try opening a collaborative channel between l3 and l1 using a liquidity ad from l3. You can also try doing an open from l3 to l2 using the same l2 compact_lease as before, the liquidity ad works as long as the node has funds to open more channels!!
+```
+
+
+# Thanks for being #reckless with us! Hope you learned a lot and we look forward to hearing from you!
 
 Here are the links again to CoreLN and Base58:
 
